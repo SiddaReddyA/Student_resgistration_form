@@ -1,9 +1,18 @@
-from fastapi import FastAPI, Depends
+# ================= IMPORTS =================
+
+from fastapi import FastAPI, Depends, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
 from database import SessionLocal, engine, Base
 from models import Todo, Admin
+
+import shutil
+import os
+# for mail notification
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 app = FastAPI()
 
@@ -80,9 +89,21 @@ def add_student(student: dict, db: Session = Depends(get_db)):
     db.commit()
 
     db.refresh(new_student)
+    # ================= SEND EMAIL =================
 
+    # send_email(
+
+    #     student["email"],
+
+    #     "Student Registration",
+
+    #     f"Hello {student['name']}, Your registration is successful."
+    # )
     return {
-        "message": "Student Added"
+
+        "message": "Student Added",
+
+        "id": new_student.id
     }
 
 # ================= UPDATE STUDENT =================
@@ -213,6 +234,35 @@ def signup(user: dict, db: Session = Depends(get_db)):
         "message": "Signup Success"
     }
 
+# ================= UPLOAD PHOTO =================
+
+ # ================= UPLOAD PHOTO =================
+
+UPLOAD_FOLDER = "photos"
+
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+
+@app.post("/upload-photo/{student_id}")
+async def upload_photo(student_id: int, file: UploadFile = File(...)):
+
+    # CHECK JPG FILE
+
+    if not file.filename.lower().endswith(".jpg"):
+
+        raise HTTPException(
+            status_code=400,
+            detail="File extension should be jpg"
+        )
+
+    file_path = f"{UPLOAD_FOLDER}/{student_id}_{file.filename}"
+
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+
+    return {
+        "message": "Photo Uploaded Successfully"
+    }
 # ================= UPDATE ATTENDANCE =================
 
 @app.put("/attendance/{id}")
@@ -236,6 +286,92 @@ def update_attendance(
 
     db.commit()
 
+    # ================= SEND EMAIL =================
+
+    # send_email(
+
+    #     student.email,
+
+    #     "Attendance Updated",
+
+    #     f"Your attendance status is {attendance['attendance']}"
+    # )
+
     return {
         "message": "Attendance Updated"
     }
+
+# ================= UPDATE MARKS =================
+
+@app.put("/marks/{id}")
+def update_marks(
+    id: int,
+    marks: dict,
+    db: Session = Depends(get_db)
+):
+
+    student = db.query(Todo).filter(
+        Todo.id == id
+    ).first()
+
+    if student:
+
+        student.maths = marks["maths"]
+
+        student.physics = marks["physics"]
+
+        student.chemistry = marks["chemistry"]
+
+        student.english = marks["english"]
+
+        student.computer = marks["computer"]
+
+        student.total = marks["total"]
+
+        student.percentage = marks["percentage"]
+
+        student.grade = marks["grade"]
+
+        student.result = marks["result"]
+
+        db.commit()
+        # send_email(
+
+        #     student.email,
+
+        #     "Marks Updated",
+
+        #     f"Your percentage is {marks['percentage']}%"
+        # )
+        return {
+
+            "message": "Marks Updated Successfully"
+        }
+
+    return {
+
+        "message": "Student Not Found"
+    }
+# def send_email(to_email, subject, body):
+
+#     sender_email = "yourgmail@gmail.com"
+
+#     sender_password = "your_app_password"
+
+#     message = MIMEMultipart()
+
+#     message["From"] = sender_email
+#     message["To"] = to_email
+#     message["Subject"] = subject
+
+#     message.attach(MIMEText(body, "plain"))
+
+#     server = smtplib.SMTP("smtp.gmail.com", 587)
+
+#     server.starttls()
+
+#     server.login(sender_email, sender_password)
+
+#     server.send_message(message)
+
+#     server.quit()

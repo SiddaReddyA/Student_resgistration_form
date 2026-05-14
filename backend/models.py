@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, Float
 from database import Base
 
 class Todo(Base):
@@ -7,7 +7,7 @@ class Todo(Base):
 
     id = Column(Integer, primary_key=True, index=True)
 
-    studentid = Column(Integer)
+    studentid = Column(String(255))
 
     name = Column(String(255))
 
@@ -15,17 +15,33 @@ class Todo(Base):
 
     pas = Column(String(255))
 
-    gender = Column(String(50))
+    gender = Column(String(255))
 
-    date = Column(String(100))
+    date = Column(String(255))
 
-    nation = Column(String(100))
+    nation = Column(String(255))
 
-    language = Column(String(100))
+    language = Column(String(255))
 
-    attendance = Column(String(50), default="Absent")
+    attendance = Column(String(255))
 
+    maths = Column(Integer, default=0)
 
+    physics = Column(Integer, default=0)
+
+    chemistry = Column(Integer, default=0)
+
+    english = Column(Integer, default=0)
+
+    computer = Column(Integer, default=0)
+
+    total = Column(Integer, default=0)
+
+    percentage = Column(Float, default=0)
+
+    grade = Column(String(255), default="")
+
+    result = Column(String(255), default="")
 class Admin(Base):
 
     __tablename__ = "admins"
