@@ -3,11 +3,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
 from database import SessionLocal, engine, Base
-from models import Todo,Admin
+from models import Todo, Admin
 
 app = FastAPI()
 
-# CORS
+# ================= CORS =================
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -16,10 +17,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Create Tables
+# ================= CREATE TABLES =================
+
 Base.metadata.create_all(bind=engine)
 
-# Database Session
+# ================= DATABASE SESSION =================
+
 def get_db():
 
     db = SessionLocal()
@@ -30,7 +33,8 @@ def get_db():
     finally:
         db.close()
 
-# Home API
+# ================= HOME API =================
+
 @app.get("/")
 def home():
 
@@ -38,13 +42,15 @@ def home():
         "message": "FastAPI Running"
     }
 
-# Get Students
+# ================= GET STUDENTS =================
+
 @app.get("/students")
 def get_students(db: Session = Depends(get_db)):
 
     return db.query(Todo).all()
 
-# Add Student
+# ================= ADD STUDENT =================
+
 @app.post("/students")
 def add_student(student: dict, db: Session = Depends(get_db)):
 
@@ -54,12 +60,19 @@ def add_student(student: dict, db: Session = Depends(get_db)):
 
         name = student["name"],
 
-        email=student["email"],
-        pas=student["pas"],
-        gender=student["gender"],
-        date=student["date"],
-        nation=student["nation"],
-        language=student["language"]
+        email = student["email"],
+
+        pas = student["pas"],
+
+        gender = student["gender"],
+
+        date = student["date"],
+
+        nation = student["nation"],
+
+        language = student["language"],
+
+        attendance = "Absent"
     )
 
     db.add(new_student)
@@ -71,14 +84,25 @@ def add_student(student: dict, db: Session = Depends(get_db)):
     return {
         "message": "Student Added"
     }
-@app.get("/students")
-def get_students(db: Session = Depends(get_db)):
 
-    return db.query(Todo).all()
+# ================= UPDATE STUDENT =================
+
 @app.put("/students/{id}")
-def update_student(id: int, student: dict, db: Session = Depends(get_db)):
+def update_student(
+    id: int,
+    student: dict,
+    db: Session = Depends(get_db)
+):
 
-    existing_student = db.query(Todo).filter(Todo.id == id).first()
+    existing_student = db.query(Todo).filter(
+        Todo.id == id
+    ).first()
+
+    if not existing_student:
+
+        return {
+            "message": "Student Not Found"
+        }
 
     existing_student.studentid = student["studentid"]
 
@@ -101,10 +125,24 @@ def update_student(id: int, student: dict, db: Session = Depends(get_db)):
     return {
         "message": "Student Updated"
     }
-@app.delete("/students/{id}")
-def delete_student(id: int, db: Session = Depends(get_db)):
 
-    student = db.query(Todo).filter(Todo.id == id).first()
+# ================= DELETE STUDENT =================
+
+@app.delete("/students/{id}")
+def delete_student(
+    id: int,
+    db: Session = Depends(get_db)
+):
+
+    student = db.query(Todo).filter(
+        Todo.id == id
+    ).first()
+
+    if not student:
+
+        return {
+            "message": "Student Not Found"
+        }
 
     db.delete(student)
 
@@ -113,6 +151,9 @@ def delete_student(id: int, db: Session = Depends(get_db)):
     return {
         "message": "Student Deleted"
     }
+
+# ================= LOGIN =================
+
 @app.post("/login")
 def login(user: dict, db: Session = Depends(get_db)):
 
@@ -137,6 +178,9 @@ def login(user: dict, db: Session = Depends(get_db)):
 
         "message": "Invalid Credentials"
     }
+
+# ================= SIGNUP =================
+
 @app.post("/signup")
 def signup(user: dict, db: Session = Depends(get_db)):
 
@@ -167,4 +211,31 @@ def signup(user: dict, db: Session = Depends(get_db)):
 
     return {
         "message": "Signup Success"
+    }
+
+# ================= UPDATE ATTENDANCE =================
+
+@app.put("/attendance/{id}")
+def update_attendance(
+    id: int,
+    attendance: dict,
+    db: Session = Depends(get_db)
+):
+
+    student = db.query(Todo).filter(
+        Todo.id == id
+    ).first()
+
+    if not student:
+
+        return {
+            "message": "Student Not Found"
+        }
+
+    student.attendance = attendance["attendance"]
+
+    db.commit()
+
+    return {
+        "message": "Attendance Updated"
     }

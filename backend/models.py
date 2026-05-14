@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Date
+from sqlalchemy import Column, Integer, String
 from database import Base
 
 class Todo(Base):
@@ -17,11 +17,15 @@ class Todo(Base):
 
     gender = Column(String(50))
 
-    date = Column(Date)
+    date = Column(String(100))
 
     nation = Column(String(100))
 
     language = Column(String(100))
+
+    attendance = Column(String(50), default="Absent")
+
+
 class Admin(Base):
 
     __tablename__ = "admins"
