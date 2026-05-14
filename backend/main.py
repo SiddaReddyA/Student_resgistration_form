@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
 from database import SessionLocal, engine, Base
-from models import Todo
+from models import Todo,Admin
 
 app = FastAPI()
 
@@ -112,4 +112,59 @@ def delete_student(id: int, db: Session = Depends(get_db)):
 
     return {
         "message": "Student Deleted"
+    }
+@app.post("/login")
+def login(user: dict, db: Session = Depends(get_db)):
+
+    admin = db.query(Admin).filter(
+
+        Admin.email == user["email"],
+
+        Admin.password == user["password"]
+
+    ).first()
+
+    if admin:
+
+        return {
+
+            "message": "Login Success",
+
+            "role": admin.role
+        }
+
+    return {
+
+        "message": "Invalid Credentials"
+    }
+@app.post("/signup")
+def signup(user: dict, db: Session = Depends(get_db)):
+
+    existing_user = db.query(Admin).filter(
+        Admin.email == user["email"]
+    ).first()
+
+    if existing_user:
+
+        return {
+            "message": "Email Already Exists"
+        }
+
+    new_user = Admin(
+
+        email = user["email"],
+
+        password = user["password"],
+
+        role = user["role"]
+    )
+
+    db.add(new_user)
+
+    db.commit()
+
+    db.refresh(new_user)
+
+    return {
+        "message": "Signup Success"
     }

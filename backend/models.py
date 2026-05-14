@@ -22,3 +22,14 @@ class Todo(Base):
     nation = Column(String(100))
 
     language = Column(String(100))
+class Admin(Base):
+
+    __tablename__ = "admins"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    email = Column(String(255))
+
+    password = Column(String(255))
+
+    role = Column(String(100))
